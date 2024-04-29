@@ -47,13 +47,6 @@ struct ContentView: View {
             VStack {
                 ScrollView(showsIndicators: false) {
                     fieldsView()
-                    
-                    VStack {
-                        ForEach(dummyTodo, id: \.id) { todo in
-                            TodoItemView(todo: todo)
-                        }
-                    }
-                    .padding(.top)
                 }
             }
             .padding()
@@ -70,6 +63,13 @@ struct ContentView: View {
                 pickerCategoryView()
                 
                 textFieldView()
+                
+                VStack {
+                    ForEach(dummyTodo, id: \.id) { todo in
+                        TodoItemView(todo: todo)
+                    }
+                }
+                .padding(.top)
             }
                
             if !searchedFocus.isEmpty {
