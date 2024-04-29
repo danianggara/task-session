@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var expandCategory: Bool = false
     @State private var textInput: String = ""
     @State private var searchedFocus: [Focus] = []
+    @State private var todoList: [Todo] = []
     
     let categories = [
         Category(title: "Design", color: .red),
@@ -35,11 +36,25 @@ struct ContentView: View {
         Focus(title: "Cheer")
     ]
     
+    let dummyTodo = [
+        Todo(focus: Focus(title: "Designing UI"), category: Category(title: "Design", color: Color.green)),
+        Todo(focus: Focus(title: "Testing UI"), category: Category(title: "Testing", color: Color.red)),
+        Todo(focus: Focus(title: "Programming UI"), category: Category(title: "Programming", color: Color.blue))
+    ]
+    
     var body: some View {
         VStack {
             VStack {
-                fieldsView()
-                
+                ScrollView(showsIndicators: false) {
+                    fieldsView()
+                    
+                    VStack {
+                        ForEach(dummyTodo, id: \.id) { todo in
+                            TodoItemView(todo: todo)
+                        }
+                    }
+                    .padding(.top)
+                }
             }
             .padding()
             .frame(maxHeight: .infinity, alignment: .top)
