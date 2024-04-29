@@ -5,7 +5,9 @@
 //  Created by Dani Anggara on 29/04/24.
 //
 
+import Foundation
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @FocusState var focusState: Bool
@@ -14,6 +16,8 @@ struct ContentView: View {
     @State private var textInput: String = ""
     @State private var searchedFocus: [Focus] = []
     @State private var todoList: [Todo] = []
+    @State private var selection: Int = 0
+    @State private var keyMonitor: Any?
     
     let categories = [
         Category(title: "Design", color: .red),
@@ -96,26 +100,7 @@ struct ContentView: View {
             }
             
             if expandCategory {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.white)
-                    
-                    ScrollView(showsIndicators: false) {
-                        VStack {
-                            ForEach(categories, id: \.id) { category in
-                                Button {
-                                    
-                                } label: {
-                                    CategoryItemView(category: category)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.vertical)
-                    }
-                }
-                .frame(maxHeight: 260)
-                .offset(y: 60)
+                expandCategoriesView()
             }
         }
     }
@@ -149,6 +134,48 @@ struct ContentView: View {
             .cornerRadius(5)
         }
         .buttonStyle(.plain)
+    }
+    
+    private func expandCategoriesView() -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 5)
+                .fill(Color.white)
+            
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(categories.indices, id: \.self) { index in
+                        Button {
+                            
+                        } label: {
+                            CategoryItemView(selection: $selection, index: index, category: categories[index])
+                                .tag(index)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical)
+            }
+            .onAppear {
+                keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { nsevent in
+                    if nsevent.keyCode == 125 {
+                        selection = selection < categories.count ? selection + 1 : 0
+                    } else {
+                        if nsevent.keyCode == 126 {
+                            selection = selection > 1 ? selection - 1 : 0
+                        }
+                    }
+                    return nsevent
+                }
+            }
+            .onDisappear {
+                if keyMonitor != nil {
+                    NSEvent.removeMonitor(keyMonitor!)
+                    keyMonitor = nil
+                }
+            }
+        }
+        .frame(maxHeight: 260)
+        .offset(y: 60)
     }
     
     private func textFieldView() -> some View {

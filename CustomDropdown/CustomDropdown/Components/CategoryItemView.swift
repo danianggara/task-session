@@ -8,26 +8,29 @@
 import SwiftUI
 
 struct CategoryItemView: View {
+    @Binding var selection: Int
+    
+    var index: Int
     var category: Category
     
     var body: some View {
         HStack {
             Circle()
-                .fill(category.color)
+                .fill(selection == index ? Color.white : category.color)
                 .scaledToFit()
                 .frame(width: 9)
             
             Text(category.title)
                 .font(.subheadline.weight(.regular))
-                .foregroundColor(Color.black.opacity(0.8))
+                .foregroundColor(selection == index ? Color.white : Color.black.opacity(0.8))
             
             Spacer()
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal)
+        .padding()
+        .background(selection == index ? Color.blue : Color.white)
     }
 }
 
 #Preview {
-    CategoryItemView(category: Category(title: "Design", color: Color.red))
+    CategoryItemView(selection: .constant(1), index: 1, category: Category(title: "Design", color: Color.red))
 }
