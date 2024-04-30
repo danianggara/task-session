@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct Category: Identifiable {
     var id = UUID().uuidString
