@@ -43,12 +43,6 @@ struct ContentView: View {
         Focus(title: "Cheer")
     ]
     
-    let dummyTodo = [
-        Todo(focus: Focus(title: "Designing UI"), category: Category(title: "Design", color: Color.green)),
-        Todo(focus: Focus(title: "Testing UI"), category: Category(title: "Testing", color: Color.red)),
-        Todo(focus: Focus(title: "Programming UI"), category: Category(title: "Programming", color: Color.blue))
-    ]
-    
     var body: some View {
         VStack {
             VStack {
@@ -149,6 +143,8 @@ struct ContentView: View {
                         selectionCategory = selectionCategory > 1 ? selectionCategory - 1 : 0
                     } else if nsevent.keyCode == 36 { // Enter
                         selectCategory(selectionCategory)
+                    } else if nsevent.keyCode == 53 { // Escape
+                        expandCategory = false
                     }
                     return nsevent
                 }
@@ -194,6 +190,8 @@ struct ContentView: View {
                         selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
                     } else if nsevent.keyCode == 36 { // Enter
                         selectFocus(selectionFocus)
+                    } else if nsevent.keyCode == 53 { // Escape
+                        focusState = false
                     }
                     return nsevent
                 }
@@ -243,6 +241,9 @@ struct ContentView: View {
                             .opacity(textInput.isEmpty ? 1 : 0) // Hide when text is entered
                             .frame(maxWidth: .infinity, alignment: .leading)
                     )
+                    .onTapGesture {
+                        focusState.toggle()
+                    }
                 
                 if textInput.isEmpty == false {
                     Button {
@@ -297,6 +298,10 @@ struct ContentView: View {
         selectedCategory = categories[index]
         expandCategory = false
         appendTodoList()
+        
+        if textInput.last == "@" {
+            textInput.removeLast()
+        }
     }
     
     private func selectFocus(_ index: Int) {
