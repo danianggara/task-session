@@ -8,21 +8,25 @@
 import SwiftUI
 
 struct FocusItemView: View {
+    @Binding var selection: Int
+    
+    var index: Int
     var focus: Focus
     
     var body: some View {
         HStack {
             Text(focus.title)
                 .font(.subheadline.weight(.regular))
-                .foregroundColor(Color.black.opacity(0.8))
+                .foregroundColor(selection == index ? Color.white : Color.black.opacity(0.8))
             
             Spacer()
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal)
+        .padding()
+        .background(selection == index ? Color.blue : Color.white)
+        .cornerRadius(5)
     }
 }
 
 #Preview {
-    FocusItemView(focus: Focus(title: "Programming"))
+    FocusItemView(selection: .constant(1), index: 1, focus: Focus(title: "Programming"))
 }

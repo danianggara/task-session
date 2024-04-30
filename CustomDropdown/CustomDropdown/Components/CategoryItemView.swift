@@ -28,6 +28,7 @@ struct CategoryItemView: View {
         }
         .padding()
         .background(selection == index ? Color.blue : Color.white)
+        .cornerRadius(5)
     }
 }
 
