@@ -54,7 +54,7 @@ struct ContentView: View {
             .frame(maxHeight: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.gray.opacity(0.3))
+        .background(Color.white.opacity(0.9))
         .navigationBarBackButtonHidden()
     }
     
@@ -179,7 +179,7 @@ struct ContentView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.vertical)
+                .padding()
             }
             .onAppear {
 #if os(macOS)
@@ -213,7 +213,7 @@ struct ContentView: View {
     private func textFieldView() -> some View {
         VStack(alignment: .leading) {
             HStack {
-                TextField(selectedFocus.title.isEmpty ? "What's your focus?" : selectedFocus.title, text: $textInput)
+                TextField("", text: $textInput)
                     .font(.subheadline)
                     .foregroundColor(Color.black)
                     .autocorrectionDisabled()

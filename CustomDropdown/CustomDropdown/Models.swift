@@ -22,5 +22,5 @@ struct Focus: Identifiable {
 struct Todo: Identifiable {
     var id = UUID().uuidString
     var focus: Focus
-    var category: Category
+    var category: Category?
 }
