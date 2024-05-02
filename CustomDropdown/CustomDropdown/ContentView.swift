@@ -20,7 +20,6 @@ struct ContentView: View {
     @State private var todoList: [Todo] = []
     @State private var selectionCategory: Int = 0
     @State private var selectionFocus: Int = 0
-    @State private var keyMonitorFocus: Any?
     
     let categories = [
         Category(title: "Design", color: .red),
@@ -143,7 +142,7 @@ struct ContentView: View {
                             return .handled
                         }
                         .onKeyPress(.downArrow) {
-                            selectionCategory = selectionCategory < categories.count ? selectionCategory + 1 : 0
+                            selectionCategory = selectionCategory < categories.count-1 ? selectionCategory + 1 : 0
                             return .handled
                         }
                         .onKeyPress(.return) {
@@ -196,7 +195,7 @@ struct ContentView: View {
                             return .handled
                         }
                         .onKeyPress(.downArrow) {
-                            selectionFocus = selectionFocus < searchedFocus.count ? selectionFocus + 1 : 0
+                            selectionFocus = selectionFocus < searchedFocus.count-1 ? selectionFocus + 1 : 0
                             return .handled
                         }
                         .onKeyPress(.return) {
@@ -249,12 +248,12 @@ struct ContentView: View {
                         Text(selectedFocus.title.isEmpty ? "What's your focus?" : selectedFocus.title)
                             .font(.subheadline)
                             .foregroundColor(selectedFocus.title.isEmpty ? Color.gray : Color.black)
-                            .opacity(textInput.isEmpty ? 1 : 0) // Hide when text is entered
+                            .opacity(textInput.isEmpty ? 1 : 0)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     )
-                    .onTapGesture {
-                        focusState.toggle()
-                    }
+//                    .onTapGesture {
+//                        focusState.toggle()
+//                    }
                 
                 if textInput.isEmpty == false {
                     Button {
@@ -265,6 +264,22 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+            .onKeyPress(.upArrow) {
+                selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
+                return .handled
+            }
+            .onKeyPress(.downArrow) {
+                selectionFocus = selectionFocus < searchedFocus.count-1 ? selectionFocus + 1 : 0
+                return .handled
+            }
+            .onKeyPress(.return) {
+                selectFocus(selectionFocus)
+                return .handled
+            }
+            .onKeyPress(.escape) {
+                focusState = false
+                return .handled
             }
         }
         .padding()
@@ -279,16 +294,17 @@ struct ContentView: View {
     }
     
     private func appendTodoList() {
-        if !selectedCategory.title.isEmpty && !selectedFocus.title.isEmpty {
+        if !selectedFocus.title.isEmpty {
             let todo = Todo(focus: selectedFocus, category: selectedCategory)
             todoList.append(todo)
+            
+            // reset
             selectedCategory = Category(title: "", color: Color.clear)
             selectedFocus = Focus(title: "")
+            focusCategories = false
             focusState = false
             selectionCategory = 0
             selectionFocus = 0
-        } else if selectedCategory.title.isEmpty && !selectedFocus.title.isEmpty {
-            expandCategory.toggle()
         } else if !selectedCategory.title.isEmpty && selectedFocus.title.isEmpty {
             searchedFocus = searchFocusItem()
             focusState = true
@@ -306,21 +322,25 @@ struct ContentView: View {
     }
     
     private func selectCategory(_ index: Int) {
-        selectedCategory = categories[index]
-        expandCategory = false
-        appendTodoList()
-        
-        if textInput.last == "@" {
-            textInput.removeLast()
+        if index <= categories.count-1 {
+            selectedCategory = categories[index]
+            expandCategory = false
+            appendTodoList()
+            
+            if textInput.last == "@" {
+                textInput.removeLast()
+            }
         }
     }
     
     private func selectFocus(_ index: Int) {
-        selectedFocus = searchedFocus[index]
-        focusState = false
-        textInput.removeAll()
-        searchedFocus.removeAll()
-        appendTodoList()
+        if index <= searchedFocus.count-1 {
+            selectedFocus = searchedFocus[index]
+            focusState = false
+            textInput.removeAll()
+            searchedFocus.removeAll()
+            appendTodoList()
+        }
     }
 }
 
