@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @FocusState var focusState: Bool
     @FocusState var focusCategories: Bool
+    @FocusState var focusTodoList: Bool
     
     @State private var expandCategory: Bool = false
     @State private var textInput: String = ""
@@ -18,8 +19,10 @@ struct ContentView: View {
     @State private var selectedCategory: Category = Category(title: "", color: Color.black)
     @State private var selectedFocus: Focus = Focus(title: "")
     @State private var todoList: [Todo] = []
+    
     @State private var selectionCategory: Int = 0
     @State private var selectionFocus: Int = 0
+    @State private var selectionTodoList: Int = 0
     
     let categories = [
         Category(title: "Design", color: .red),
@@ -64,12 +67,7 @@ struct ContentView: View {
                 
                 textFieldView()
                 
-                VStack {
-                    ForEach(todoList, id: \.id) { todo in
-                        TodoItemView(todo: todo)
-                    }
-                }
-                .padding(.top)
+                todoListsView()
             }
             
             if focusState && !searchedFocus.isEmpty {
@@ -229,13 +227,8 @@ struct ContentView: View {
                     .autocorrectionDisabled()
                     .focused($focusState)
                     .textFieldStyle(.plain)
-                    .onChange(of: focusState, perform: { value in
-                        if focusState {
-                            searchedFocus = searchFocusItem()
-                        }
-                    })
-                    .onChange(of: textInput, perform: { value in
-                        searchedFocus = searchFocusItem()
+                    .onChange(of: textInput, initial: true) {
+                        doSearchFocus()
                         
                         if textInput.contains("@") {
                             withAnimation {
@@ -243,17 +236,19 @@ struct ContentView: View {
                                 expandCategory.toggle()
                             }
                         }
-                    })
+                    }
                     .overlay(
                         Text(selectedFocus.title.isEmpty ? "What's your focus?" : selectedFocus.title)
                             .font(.subheadline)
                             .foregroundColor(selectedFocus.title.isEmpty ? Color.gray : Color.black)
                             .opacity(textInput.isEmpty ? 1 : 0)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .onTapGesture {
+                                if !focusState {
+                                    focusState = true
+                                }
+                            }
                     )
-//                    .onTapGesture {
-//                        focusState.toggle()
-//                    }
                 
                 if textInput.isEmpty == false {
                     Button {
@@ -293,6 +288,42 @@ struct ContentView: View {
         }
     }
     
+    private func todoListsView() -> some View {
+        VStack {
+            ForEach(todoList.indices, id: \.self) { index in
+                TodoItemView(selection: $selectionTodoList, index: index, todo: todoList[index])
+                    .id(index)
+                    .focusable()
+                    .focusEffectDisabled()
+                    .onTapGesture {
+                        selectionTodoList = index
+                    }
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    focusTodoList = true
+                }
+            }
+            .focused($focusTodoList)
+            .onKeyPress(.upArrow) {
+                selectionTodoList = selectionTodoList > 1 ? selectionTodoList - 1 : 0
+                return .handled
+            }
+            .onKeyPress(.downArrow) {
+                selectionTodoList = selectionTodoList < todoList.count-1 ? selectionTodoList + 1 : 0
+                return .handled
+            }
+            .onKeyPress(.return) {
+                return .handled
+            }
+            .onKeyPress(.escape) {
+                focusTodoList = false
+                return .handled
+            }
+        }
+        .padding(.top)
+    }
+    
     private func appendTodoList() {
         if !selectedFocus.title.isEmpty {
             let todo = Todo(focus: selectedFocus, category: selectedCategory)
@@ -306,18 +337,23 @@ struct ContentView: View {
             selectionCategory = 0
             selectionFocus = 0
         } else if !selectedCategory.title.isEmpty && selectedFocus.title.isEmpty {
-            searchedFocus = searchFocusItem()
+            doSearchFocus()
             focusState = true
         }
     }
     
-    private func searchFocusItem() -> [Focus] {
+    private func doSearchFocus() {
         if textInput.isEmpty {
-            return focusItem
+            searchedFocus = focusItem
         } else {
-            return focusItem.filter { focus in
-                focus.title.lowercased().contains(textInput.lowercased())
-            }
+            searchedFocus = searchFocus(for: textInput)
+        }
+    }
+    
+    private func searchFocus(for keyword: String) -> [Focus] {
+        return focusItem.filter { focus in
+            let lowercaseName = focus.title.lowercased()
+            return lowercaseName.contains(keyword)
         }
     }
     

@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct TodoItemView: View {
+    @Binding var selection: Int
+    
+    var index: Int
+    
     var todo: Todo
     
     var body: some View {
@@ -17,23 +21,23 @@ struct TodoItemView: View {
                 .scaledToFit()
                 .frame(width: 20)
                 .font(.headline.weight(.bold))
-                .foregroundColor(Color.black.opacity(0.3))
+                .foregroundColor(selection == index ? Color.white : Color.black.opacity(0.3))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(todo.focus.title)
                     .font(.subheadline.weight(.regular))
-                    .foregroundColor(Color.black.opacity(0.8))
+                    .foregroundColor(selection == index ? Color.white : Color.black.opacity(0.8))
                 
                 if todo.category?.title.isEmpty == false {
                     HStack {
                         Circle()
-                            .fill(todo.category?.color ?? .green)
+                            .fill((selection == index ? Color.white : todo.category?.color) ?? .green)
                             .scaledToFit()
                             .frame(width: 9)
                         
                         Text(todo.category?.title ?? "")
                             .font(.footnote)
-                            .foregroundColor(Color.black.opacity(0.6))
+                            .foregroundColor(selection == index ? Color.white : Color.black.opacity(0.6))
                         
                         Spacer()
                     }
@@ -42,11 +46,11 @@ struct TodoItemView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(Color.white)
+        .background(selection == index ? Color.blue : Color.white)
         .cornerRadius(5)
     }
 }
 
 #Preview {
-    TodoItemView(todo: Todo(focus: Focus(title: "Designing app"), category: Category(title: "Design", color: Color.green)))
+    TodoItemView(selection: .constant(1), index: 1, todo: Todo(focus: Focus(title: "Designing app"), category: Category(title: "Design", color: Color.green)))
 }
