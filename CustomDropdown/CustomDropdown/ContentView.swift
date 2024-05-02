@@ -10,6 +10,7 @@ import SwiftUI
 
 struct ContentView: View {
     @FocusState var focusState: Bool
+    @FocusState var focusCategories: Bool
     
     @State private var expandCategory: Bool = false
     @State private var textInput: String = ""
@@ -19,7 +20,6 @@ struct ContentView: View {
     @State private var todoList: [Todo] = []
     @State private var selectionCategory: Int = 0
     @State private var selectionFocus: Int = 0
-    @State private var keyMonitorCategory: Any?
     @State private var keyMonitorFocus: Any?
     
     let categories = [
@@ -121,42 +121,47 @@ struct ContentView: View {
                 .fill(Color.white)
             
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ForEach(categories.indices, id: \.self) { index in
-                        Button {
-                            selectCategory(index)
-                        } label: {
+                ScrollViewReader { proxy in
+                    VStack(spacing: 0) {
+                        ForEach(categories.indices, id: \.self) { index in
                             CategoryItemView(selection: $selectionCategory, index: index, category: categories[index])
-                                .tag(index)
+                                .onTapGesture {
+                                    selectCategory(index)
+                                }
+                                .id(index)
+                                .focusable()
+                                .focusEffectDisabled()
                         }
-                        .buttonStyle(.plain)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                focusCategories = true
+                            }
+                        }
+                        .focused($focusCategories)
+                        .onKeyPress(.upArrow) {
+                            selectionCategory = selectionCategory > 1 ? selectionCategory - 1 : 0
+                            return .handled
+                        }
+                        .onKeyPress(.downArrow) {
+                            selectionCategory = selectionCategory < categories.count ? selectionCategory + 1 : 0
+                            return .handled
+                        }
+                        .onKeyPress(.return) {
+                            selectCategory(selectionCategory)
+                            return .handled
+                        }
+                        .onKeyPress(.escape) {
+                            expandCategory = false
+                            return .handled
+                        }
+                    }
+                    .padding()
+                    .onChange(of: selectionCategory) { id in
+                        withAnimation {
+                            proxy.scrollTo(id)
+                        }
                     }
                 }
-                .padding()
-            }
-            .onAppear {
-#if os(macOS)
-                keyMonitorCategory = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { nsevent in
-                    if nsevent.keyCode == 125 { // down
-                        selectionCategory = selectionCategory < categories.count ? selectionCategory + 1 : 0
-                    } else if nsevent.keyCode == 126 { // up
-                        selectionCategory = selectionCategory > 1 ? selectionCategory - 1 : 0
-                    } else if nsevent.keyCode == 36 { // Enter
-                        selectCategory(selectionCategory)
-                    } else if nsevent.keyCode == 53 { // Escape
-                        expandCategory = false
-                    }
-                    return nsevent
-                }
-#endif
-            }
-            .onDisappear {
-#if os(macOS)
-                if keyMonitorCategory != nil {
-                    NSEvent.removeMonitor(keyMonitorCategory!)
-                    keyMonitorCategory = nil
-                }
-#endif
             }
         }
         .frame(maxHeight: 260)
@@ -169,41 +174,47 @@ struct ContentView: View {
                 .fill(Color.white)
             
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ForEach(searchedFocus.indices, id: \.self) { index in
-                        Button {
-                            selectFocus(index)
-                        } label: {
+                ScrollViewReader { proxy in
+                    VStack(spacing: 0) {
+                        ForEach(searchedFocus.indices, id: \.self) { index in
                             FocusItemView(selection: $selectionFocus, index: index, focus: searchedFocus[index])
+                                .onTapGesture {
+                                    selectFocus(index)
+                                }
+                                .id(index)
+                                .focusable()
+                                .focusEffectDisabled()
                         }
-                        .buttonStyle(.plain)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                focusState = true
+                            }
+                        }
+                        .focused($focusState)
+                        .onKeyPress(.upArrow) {
+                            selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
+                            return .handled
+                        }
+                        .onKeyPress(.downArrow) {
+                            selectionFocus = selectionFocus < searchedFocus.count ? selectionFocus + 1 : 0
+                            return .handled
+                        }
+                        .onKeyPress(.return) {
+                            selectFocus(selectionFocus)
+                            return .handled
+                        }
+                        .onKeyPress(.escape) {
+                            focusState = false
+                            return .handled
+                        }
+                    }
+                    .padding()
+                    .onChange(of: selectionFocus) { id in
+                        withAnimation {
+                            proxy.scrollTo(id)
+                        }
                     }
                 }
-                .padding()
-            }
-            .onAppear {
-#if os(macOS)
-                keyMonitorFocus = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { nsevent in
-                    if nsevent.keyCode == 125 { // down
-                        selectionFocus = selectionFocus < searchedFocus.count ? selectionFocus + 1 : 0
-                    } else if nsevent.keyCode == 126 { // up
-                        selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
-                    } else if nsevent.keyCode == 36 { // Enter
-                        selectFocus(selectionFocus)
-                    } else if nsevent.keyCode == 53 { // Escape
-                        focusState = false
-                    }
-                    return nsevent
-                }
-#endif
-            }
-            .onDisappear {
-#if os(macOS)
-                if keyMonitorFocus != nil {
-                    NSEvent.removeMonitor(keyMonitorFocus!)
-                    keyMonitorFocus = nil
-                }
-#endif
             }
         }
         .frame(maxHeight: 260)
