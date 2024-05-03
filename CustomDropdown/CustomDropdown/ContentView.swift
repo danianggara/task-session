@@ -236,7 +236,7 @@ struct ContentView: View {
                             }
                         }
                     }
-                    .onChange(of: focusState, initial: true) {
+                    .onChange(of: focusState, initial: false) {
                         if focusState {
                             doSearchFocus()
                         }
@@ -261,7 +261,12 @@ struct ContentView: View {
                 return .handled
             }
             .onKeyPress(.return) {
-                selectFocus(selectionFocus)
+                if searchedFocus.isEmpty {
+                    selectedFocus = Focus(title: textInput)
+                    appendTodoList()
+                } else {
+                    selectFocus(selectionFocus)
+                }
                 return .handled
             }
             .onKeyPress(.escape) {
@@ -328,6 +333,7 @@ struct ContentView: View {
             focusState = false
             selectionCategory = 0
             selectionFocus = 0
+            textInput.removeAll()
         } else if !selectedCategory.title.isEmpty && selectedFocus.title.isEmpty {
             doSearchFocus()
             focusState = true
@@ -364,7 +370,7 @@ struct ContentView: View {
     private func selectFocus(_ index: Int) {
         if index <= searchedFocus.count-1 {
             selectedFocus = searchedFocus[index]
-            focusState = false
+            //focusState = false
             textInput.removeAll()
             searchedFocus.removeAll()
             appendTodoList()
