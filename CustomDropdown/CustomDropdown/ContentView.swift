@@ -182,7 +182,8 @@ struct ContentView: View {
                                 .focusable()
                                 .focusEffectDisabled()
                         }
-                        .focused($focusState)
+                        //.focused($focusState)
+                        //.focusable()
                         .onKeyPress(.upArrow) {
                             selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
                             return .handled
@@ -369,7 +370,6 @@ struct ContentView: View {
     private func selectFocus(_ index: Int) {
         if index <= searchedFocus.count-1 {
             selectedFocus = searchedFocus[index]
-            //focusState = false
             textInput.removeAll()
             searchedFocus.removeAll()
             appendTodoList()
