@@ -335,7 +335,6 @@ struct ContentView: View {
             selectionFocus = 0
             textInput.removeAll()
         } else if !selectedCategory.title.isEmpty && selectedFocus.title.isEmpty {
-            doSearchFocus()
             focusState = true
         }
     }
