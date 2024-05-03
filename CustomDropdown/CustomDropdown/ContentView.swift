@@ -22,7 +22,7 @@ struct ContentView: View {
     
     @State private var selectionCategory: Int = 0
     @State private var selectionFocus: Int = 0
-    @State private var selectionTodoList: Int = 0
+    @State private var selectionTodoList: Int? = nil
     
     let categories = [
         Category(title: "Design", color: .red),
@@ -182,11 +182,6 @@ struct ContentView: View {
                                 .focusable()
                                 .focusEffectDisabled()
                         }
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                focusState = true
-                            }
-                        }
                         .focused($focusState)
                         .onKeyPress(.upArrow) {
                             selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
@@ -222,12 +217,16 @@ struct ContentView: View {
         VStack(alignment: .leading) {
             HStack {
                 TextField("", text: $textInput)
+                    .placeholder(when: textInput.isEmpty) {
+                        Text("What's your focus?")
+                            .foregroundColor(.gray)
+                    }
                     .font(.subheadline)
                     .foregroundColor(Color.black)
                     .autocorrectionDisabled()
                     .focused($focusState)
                     .textFieldStyle(.plain)
-                    .onChange(of: textInput, initial: true) {
+                    .onChange(of: textInput, initial: false) {
                         doSearchFocus()
                         
                         if textInput.contains("@") {
@@ -237,18 +236,11 @@ struct ContentView: View {
                             }
                         }
                     }
-                    .overlay(
-                        Text(selectedFocus.title.isEmpty ? "What's your focus?" : selectedFocus.title)
-                            .font(.subheadline)
-                            .foregroundColor(selectedFocus.title.isEmpty ? Color.gray : Color.black)
-                            .opacity(textInput.isEmpty ? 1 : 0)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .onTapGesture {
-                                if !focusState {
-                                    focusState = true
-                                }
-                            }
-                    )
+                    .onChange(of: focusState, initial: true) {
+                        if focusState {
+                            doSearchFocus()
+                        }
+                    }
                 
                 if textInput.isEmpty == false {
                     Button {
@@ -306,11 +298,11 @@ struct ContentView: View {
             }
             .focused($focusTodoList)
             .onKeyPress(.upArrow) {
-                selectionTodoList = selectionTodoList > 1 ? selectionTodoList - 1 : 0
+                selectionTodoList = selectionTodoList ?? 0 > 1 ? (selectionTodoList ?? 0) - 1 : 0
                 return .handled
             }
             .onKeyPress(.downArrow) {
-                selectionTodoList = selectionTodoList < todoList.count-1 ? selectionTodoList + 1 : 0
+                selectionTodoList = selectionTodoList ?? 0 < todoList.count-1 ? (selectionTodoList ?? 0) + 1 : 0
                 return .handled
             }
             .onKeyPress(.return) {
@@ -376,6 +368,19 @@ struct ContentView: View {
             textInput.removeAll()
             searchedFocus.removeAll()
             appendTodoList()
+        }
+    }
+}
+
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content) -> some View {
+
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
         }
     }
 }

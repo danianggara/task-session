@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TodoItemView: View {
-    @Binding var selection: Int
+    @Binding var selection: Int?
     
     var index: Int
     
