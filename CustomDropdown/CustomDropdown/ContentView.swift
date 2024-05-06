@@ -15,7 +15,9 @@ struct ContentView: View {
     
     @State private var expandCategory: Bool = false
     @State private var textInput: String = ""
+    @State private var temporaryInput: String = ""
     @State private var searchedFocus: [Focus] = []
+    @State private var searchedCategory: [Category] = []
     @State private var selectedCategory: Category = Category(title: "", color: Color.black)
     @State private var selectedFocus: Focus = Focus(title: "")
     @State private var todoList: [Todo] = []
@@ -162,7 +164,7 @@ struct ContentView: View {
             }
         }
         .frame(maxHeight: 260)
-        .offset(y: 60)
+        .offset(y: 120)
     }
     
     private func expandFocusView() -> some View {
@@ -348,10 +350,25 @@ struct ContentView: View {
         }
     }
     
+    private func doSearchCategory() {
+        if textInput.isEmpty {
+            searchedCategory = categories
+        } else {
+            searchedCategory = searchCategory(for: textInput)
+        }
+    }
+    
     private func searchFocus(for keyword: String) -> [Focus] {
         return focusItem.filter { focus in
             let lowercaseName = focus.title.lowercased()
-            return lowercaseName.contains(keyword)
+            return lowercaseName.contains(keyword.lowercased())
+        }
+    }
+    
+    private func searchCategory(for keyword: String) -> [Category] {
+        return categories.filter { category in
+            let lowercaseName = category.title.lowercased()
+            return lowercaseName.contains(keyword.lowercased())
         }
     }
     
@@ -418,6 +435,13 @@ extension Color {
             blue:  Double(b) / 255,
             opacity: Double(a) / 255
         )
+    }
+    
+    static var random: Color {
+        let red = Double.random(in: 0..<1)
+        let green = Double.random(in: 0..<1)
+        let blue = Double.random(in: 0..<1)
+        return Color(red: red, green: green, blue: blue)
     }
 }
 
