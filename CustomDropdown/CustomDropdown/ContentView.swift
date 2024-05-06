@@ -76,7 +76,7 @@ struct ContentView: View {
                 expandFocusView()
             }
             
-            if expandCategory {
+            if expandCategory && !searchedCategory.isEmpty {
                 expandCategoriesView()
             }
         }
@@ -84,9 +84,14 @@ struct ContentView: View {
     
     private func pickerCategoryView() -> some View {
         Button {
+            doSearchCategory()
+            focusState = false
+            //searchedFocus.removeAll()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                focusCategories = true
+            }
+            
             withAnimation {
-                focusState = false
-                searchedFocus.removeAll()
                 expandCategory.toggle()
             }
         } label: {
@@ -122,8 +127,8 @@ struct ContentView: View {
             ScrollView(showsIndicators: false) {
                 ScrollViewReader { proxy in
                     VStack(spacing: 0) {
-                        ForEach(categories.indices, id: \.self) { index in
-                            CategoryItemView(selection: $selectionCategory, index: index, category: categories[index])
+                        ForEach(searchedCategory.indices, id: \.self) { index in
+                            CategoryItemView(selection: $selectionCategory, index: index, category: searchedCategory[index])
                                 .onTapGesture {
                                     selectCategory(index)
                                 }
@@ -131,18 +136,13 @@ struct ContentView: View {
                                 .focusable()
                                 .focusEffectDisabled()
                         }
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                focusCategories = true
-                            }
-                        }
                         .focused($focusCategories)
                         .onKeyPress(.upArrow) {
                             selectionCategory = selectionCategory > 1 ? selectionCategory - 1 : 0
                             return .handled
                         }
                         .onKeyPress(.downArrow) {
-                            selectionCategory = selectionCategory < categories.count-1 ? selectionCategory + 1 : 0
+                            selectionCategory = selectionCategory < searchedCategory.count-1 ? selectionCategory + 1 : 0
                             return .handled
                         }
                         .onKeyPress(.return) {
@@ -151,6 +151,7 @@ struct ContentView: View {
                         }
                         .onKeyPress(.escape) {
                             expandCategory = false
+                            focusCategories = false
                             return .handled
                         }
                     }
@@ -231,17 +232,23 @@ struct ContentView: View {
                     .textFieldStyle(.plain)
                     .onChange(of: textInput, initial: false) {
                         doSearchFocus()
+                        doSearchCategory()
                         
                         if textInput.contains("@") {
                             withAnimation {
-                                focusState = false
-                                expandCategory.toggle()
+                                //focusState = false
+                                expandCategory = true
+                            }
+                        } else {
+                            withAnimation {
+                                expandCategory = false
                             }
                         }
                     }
                     .onChange(of: focusState, initial: false) {
                         if focusState {
                             doSearchFocus()
+                            doSearchCategory()
                         }
                     }
                 
@@ -256,24 +263,34 @@ struct ContentView: View {
                 }
             }
             .onKeyPress(.upArrow) {
-                selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
+                if !expandCategory {
+                    selectionFocus = selectionFocus > 1 ? selectionFocus - 1 : 0
+                } else {
+                    selectionCategory = selectionCategory > 1 ? selectionCategory - 1 : 0
+                }
                 return .handled
             }
             .onKeyPress(.downArrow) {
-                selectionFocus = selectionFocus < searchedFocus.count-1 ? selectionFocus + 1 : 0
+                if !expandCategory {
+                    selectionFocus = selectionFocus < searchedFocus.count-1 ? selectionFocus + 1 : 0
+                } else {
+                    selectionCategory = selectionCategory < searchedCategory.count-1 ? selectionCategory + 1 : 0
+                }
                 return .handled
             }
             .onKeyPress(.return) {
-                if searchedFocus.isEmpty {
-                    selectedFocus = Focus(title: textInput)
-                    appendTodoList()
+                if !expandCategory {
+                    handleFocusSelection()
                 } else {
-                    selectFocus(selectionFocus)
+                    handleCategorySelection()
                 }
                 return .handled
             }
             .onKeyPress(.escape) {
                 focusState = false
+                expandCategory = false
+                searchedCategory.removeAll()
+                searchedFocus.removeAll()
                 return .handled
             }
         }
@@ -324,6 +341,25 @@ struct ContentView: View {
         .padding(.top)
     }
     
+    private func handleCategorySelection() {
+        if searchedCategory.isEmpty {
+            let input = textInput.components(separatedBy: "@")
+            selectedCategory = Category(title: input[1], color: Color.random)
+            textInput = input[0]
+        } else {
+            selectCategory(selectionCategory)
+        }
+    }
+    
+    private func handleFocusSelection() {
+        if searchedFocus.isEmpty {
+            selectedFocus = Focus(title: textInput)
+            appendTodoList()
+        } else {
+            selectFocus(selectionFocus)
+        }
+    }
+    
     private func appendTodoList() {
         if !selectedFocus.title.isEmpty {
             let todo = Todo(focus: selectedFocus, category: selectedCategory)
@@ -351,10 +387,16 @@ struct ContentView: View {
     }
     
     private func doSearchCategory() {
-        if textInput.isEmpty {
-            searchedCategory = categories
-        } else {
-            searchedCategory = searchCategory(for: textInput)
+        searchedCategory = categories
+        
+        if textInput.contains("@") {
+            let input = textInput.components(separatedBy: "@")[1]
+            
+            if input.isEmpty {
+                searchedCategory = categories
+            } else {
+                searchedCategory = searchCategory(for: input)
+            }
         }
     }
     
@@ -373,13 +415,14 @@ struct ContentView: View {
     }
     
     private func selectCategory(_ index: Int) {
-        if index <= categories.count-1 {
-            selectedCategory = categories[index]
+        if index <= searchedCategory.count-1 {
+            selectedCategory = searchedCategory[index]
             expandCategory = false
             appendTodoList()
             
-            if textInput.last == "@" {
-                textInput.removeLast()
+            if textInput.contains("@") {
+                let input = textInput.components(separatedBy: "@")
+                textInput = input[0]
             }
         }
     }
